@@ -11,6 +11,7 @@ from torchvision.transforms import ToTensor
 import ray.train as train
 from ray.train.torch import TorchTrainer
 from ray.air.config import ScalingConfig
+from torch.nn.modules.utils import consume_prefix_in_state_dict_if_present
 
 # Download training data from open datasets.
 training_data = datasets.FashionMNIST(
@@ -108,10 +109,13 @@ def train_func(config: Dict):
     loss_fn = nn.CrossEntropyLoss()
     optimizer = torch.optim.SGD(model.parameters(), lr=lr)
 
-    for _ in range(epochs):
+    for epoch in range(epochs):
         train_epoch(train_dataloader, model, loss_fn, optimizer)
         loss = validate_epoch(test_dataloader, model, loss_fn)
         session.report(dict(loss=loss))
+        state_dict = model.state_dict()
+        consume_prefix_in_state_dict_if_present(state_dict, "module.")
+        train.save_checkpoint(epoch=epoch, model_weights=state_dict)
 
 
 def train_fashion_mnist(num_workers=2, use_gpu=False):
