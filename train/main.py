@@ -2,6 +2,7 @@ import argparse
 from typing import Dict
 from pprint import pprint
 from ray.air import session
+from ray.air import Checkpoint
 
 import torch
 from torch import nn
@@ -12,6 +13,8 @@ from torchvision.transforms import ToTensor
 import ray.train as train
 from ray.train.torch import TorchTrainer
 from ray.air.config import ScalingConfig
+from ray.air.config import RunConfig
+from ray.air.config import CheckpointConfig
 from torch.nn.modules.utils import consume_prefix_in_state_dict_if_present
 
 # Download training data from open datasets.
@@ -114,6 +117,11 @@ def train_func(config: Dict):
         train_epoch(train_dataloader, model, loss_fn, optimizer)
         loss = validate_epoch(test_dataloader, model, loss_fn)
         session.report(dict(loss=loss))
+        session.report({"loss": loss,
+                        "epoch": epoch
+                        },
+                        checkpoint=Checkpoint.from_dict(dict(epoch=epoch, model=model.state_dict()))
+                    )
         # state_dict = model.state_dict()
         # consume_prefix_in_state_dict_if_present(state_dict, "module.")
         # train.save_checkpoint(epoch=epoch, model_weights=state_dict)
@@ -124,6 +132,7 @@ def train_fashion_mnist(num_workers=2, use_gpu=False):
         train_loop_per_worker=train_func,
         train_loop_config={"lr": 1e-3, "batch_size": 64, "epochs": 4},
         scaling_config=ScalingConfig(num_workers=num_workers, use_gpu=use_gpu),
+        run_config = RunConfig(checkpoint_config=CheckpointConfig(num_to_keep=1))
     )
     result = trainer.fit()
     print(f"Last result: {result.metrics}")
