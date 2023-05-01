@@ -1,4 +1,6 @@
 #!/bin/sh
 
-pip install ./requirements.txt
-python main.py
+current_dir=$(pwd) 
+
+pip install $current_dir/requirements.txt
+python $current_dir/main.py
