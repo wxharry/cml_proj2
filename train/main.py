@@ -141,7 +141,7 @@ def train_fashion_mnist(num_workers=2, use_gpu=False):
     print(f"Last result: {result.metrics}")
     print(f"best_checkpoints: {result.best_checkpoints}")
     print(f"result.log_dir: {result.log_dir}")
-    result.checkpoint.to_directory("~/models/")
+    result.checkpoint.to_directory("models/")
 
 
 if __name__ == "__main__":
