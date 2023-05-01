@@ -4,13 +4,12 @@ client = JobSubmissionClient("http://0.0.0.0:8265")
 
 kick_off_pytorch_benchmark = (
     # Clone ray. If ray is already present, don't clone again.
-    "git clone https://github.com/pytorch/examples.git || true;"
+    "git clone https://github.com/wxharry/cml_proj2.git || true;"
     # Run the training code.
-    "python -m pip install -r examples/mnist/requirements.txt || true;"
+    "python -m pip install -r cml_proj2/requirements.txt || true;"
 
-    "cd examples/mnist/ || true;"
+    "cd cml_proj2/ || true;"
     "python main.py"
-    " --epoch=2 --save-model"
 )
 
 
