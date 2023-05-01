@@ -1,3 +1,4 @@
+import os
 import argparse
 from typing import Dict
 from pprint import pprint
@@ -16,6 +17,8 @@ from ray.air.config import ScalingConfig
 from ray.air.config import RunConfig
 from ray.air.config import CheckpointConfig
 from torch.nn.modules.utils import consume_prefix_in_state_dict_if_present
+
+cur_path = os.path.dirname(os.path.realpath(__file__))
 
 # Download training data from open datasets.
 training_data = datasets.FashionMNIST(
@@ -138,6 +141,7 @@ def train_fashion_mnist(num_workers=2, use_gpu=False):
     print(f"Last result: {result.metrics}")
     print(f"best_checkpoints: {result.best_checkpoints}")
     print(f"result.log_dir: {result.log_dir}")
+    result.checkpoint.to_directory("~/models/")
 
 
 if __name__ == "__main__":
