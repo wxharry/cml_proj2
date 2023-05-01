@@ -1,5 +1,6 @@
 import argparse
 from typing import Dict
+from pprint import pprint
 from ray.air import session
 
 import torch
@@ -113,9 +114,9 @@ def train_func(config: Dict):
         train_epoch(train_dataloader, model, loss_fn, optimizer)
         loss = validate_epoch(test_dataloader, model, loss_fn)
         session.report(dict(loss=loss))
-        state_dict = model.state_dict()
-        consume_prefix_in_state_dict_if_present(state_dict, "module.")
-        train.save_checkpoint(epoch=epoch, model_weights=state_dict)
+        # state_dict = model.state_dict()
+        # consume_prefix_in_state_dict_if_present(state_dict, "module.")
+        # train.save_checkpoint(epoch=epoch, model_weights=state_dict)
 
 
 def train_fashion_mnist(num_workers=2, use_gpu=False):
@@ -126,6 +127,8 @@ def train_fashion_mnist(num_workers=2, use_gpu=False):
     )
     result = trainer.fit()
     print(f"Last result: {result.metrics}")
+    print(f"best_checkpoints: {result.best_checkpoints}")
+    print(f"result.log_dir: {result.log_dir}")
 
 
 if __name__ == "__main__":
