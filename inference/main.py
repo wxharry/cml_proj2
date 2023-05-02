@@ -43,7 +43,7 @@ batch_predictor = BatchPredictor.from_checkpoint(
     my_infr_checkpoint, TorchPredictor, model=my_model
 )
 
-data_dir = "cml_proj2/inference/dataset"
+data_dir = "./dataset"
 ds = ray.data.read_images(data_dir, size=(28, 28), include_paths=True)
 
 predicted_probabilities = batch_predictor.predict(ds)
