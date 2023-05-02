@@ -59,6 +59,7 @@ ds = from_torch(dataset)
 
 # data_dir = "cml_proj2/inference/dataset"
 # ds = read_images(data_dir, size=(28, 28), include_paths=True)
+# predicted_probabilities = batch_predictor.predict(ds, feature_columns=["image"])
 
-predicted_probabilities = batch_predictor.predict(ds, feature_columns=["image"])
+predicted_probabilities = batch_predictor.predict(ds)
 predicted_probabilities.show()
