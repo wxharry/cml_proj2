@@ -7,6 +7,7 @@ from ray.air import Checkpoint
 from torch import nn
 
 import ray.train as train
+import torch.nn.functional as F
 
 from ray.train.batch_predictor import BatchPredictor
 from ray.train.torch import TorchPredictor
@@ -43,7 +44,7 @@ batch_predictor = BatchPredictor.from_checkpoint(
     my_infr_checkpoint, TorchPredictor, model=my_model
 )
 
-data_dir = "./dataset"
+data_dir = "cml_proj2/inference/dataset"
 ds = ray.data.read_images(data_dir, size=(28, 28), include_paths=True)
 
 predicted_probabilities = batch_predictor.predict(ds)
