@@ -125,7 +125,7 @@ def train_func(config: Dict):
     model = NeuralNetwork()
     model = train.torch.prepare_model(model)
 
-    loss_fn = F.null_loss()
+    loss_fn = F.nll_loss()
     optimizer = torch.optim.Adadelta(model.parameters(), lr=lr)
 
     for epoch in range(epochs):
