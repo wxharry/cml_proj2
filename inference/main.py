@@ -41,7 +41,7 @@ my_infr_checkpoint = Checkpoint.from_directory("models/")
 my_model = NeuralNetwork()
 
 batch_predictor = BatchPredictor.from_checkpoint(
-    my_infr_checkpoint, TorchPredictor, model=my_model
+    my_infr_checkpoint, TorchPredictor
 )
 
 data_dir = "cml_proj2/inference/dataset"
