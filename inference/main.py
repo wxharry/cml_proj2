@@ -44,7 +44,7 @@ batch_predictor = BatchPredictor.from_checkpoint(
 )
 
 data_dir = "cml_proj2/inference/dataset"
-ds = ray.data.read_images(data_dir, size=(28, 28)).limit(3)
+ds = ray.data.read_images(data_dir, size=(28, 28), include_paths=True).limit(3)
 
 predicted_probabilities = batch_predictor.predict(ds)
 predicted_probabilities.show()
