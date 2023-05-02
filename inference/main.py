@@ -2,11 +2,11 @@ import os
 import argparse
 from typing import Dict
 import ray
+from ray.data import read_images, from_torch
 from ray.air import Checkpoint
 
 from torch import nn
-
-import ray.train as train
+from torchvision import datasets, transforms
 import torch.nn.functional as F
 
 from ray.train.batch_predictor import BatchPredictor
@@ -44,8 +44,21 @@ batch_predictor = BatchPredictor.from_checkpoint(
     my_infr_checkpoint, TorchPredictor, model=my_model
 )
 
-data_dir = "cml_proj2/inference/dataset"
-ds = ray.data.read_images(data_dir, size=(28, 28), include_paths=True)
+transform=transforms.Compose([
+    transforms.ToTensor(),
+    transforms.Normalize((0.1307,), (0.3081,))
+    ])
+
+dataset = datasets.MNIST(
+    root="~/data",
+    train=False,
+    download=True,
+    transform=transform,
+)
+ds = from_torch(dataset)
+
+# data_dir = "cml_proj2/inference/dataset"
+# ds = read_images(data_dir, size=(28, 28), include_paths=True)
 
 predicted_probabilities = batch_predictor.predict(ds, feature_columns=["image"])
 predicted_probabilities.show()
