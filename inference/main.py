@@ -41,11 +41,11 @@ my_infr_checkpoint = Checkpoint.from_directory("models/")
 my_model = NeuralNetwork()
 
 batch_predictor = BatchPredictor.from_checkpoint(
-    my_infr_checkpoint, TorchPredictor
+    my_infr_checkpoint, TorchPredictor, model=my_model
 )
 
 data_dir = "cml_proj2/inference/dataset"
 ds = ray.data.read_images(data_dir, size=(28, 28), include_paths=True)
 
-predicted_probabilities = batch_predictor.predict(ds)
+predicted_probabilities = batch_predictor.predict(ds, feature_columns=["image"])
 predicted_probabilities.show()
