@@ -7,9 +7,9 @@ from ray.air import Checkpoint
 
 import torch
 from torch import nn
+import torch.nn.functional as F
 from torch.utils.data import DataLoader
-from torchvision import datasets
-from torchvision.transforms import ToTensor
+from torchvision import datasets, transforms
 
 import ray.train as train
 from ray.train.torch import TorchTrainer
@@ -19,21 +19,25 @@ from ray.air.config import CheckpointConfig
 from torch.nn.modules.utils import consume_prefix_in_state_dict_if_present
 
 cur_path = os.path.dirname(os.path.realpath(__file__))
+transform=transforms.Compose([
+    transforms.ToTensor(),
+    transforms.Normalize((0.1307,), (0.3081,))
+    ])
 
 # Download training data from open datasets.
-training_data = datasets.FashionMNIST(
+training_data = datasets.MNIST(
     root="~/data",
     train=True,
     download=True,
-    transform=ToTensor(),
+    transform=transform,
 )
 
 # Download test data from open datasets.
-test_data = datasets.FashionMNIST(
+test_data = datasets.MNIST(
     root="~/data",
     train=False,
     download=True,
-    transform=ToTensor(),
+    transform=transform,
 )
 
 
@@ -41,20 +45,27 @@ test_data = datasets.FashionMNIST(
 class NeuralNetwork(nn.Module):
     def __init__(self):
         super(NeuralNetwork, self).__init__()
-        self.flatten = nn.Flatten()
-        self.linear_relu_stack = nn.Sequential(
-            nn.Linear(28 * 28, 512),
-            nn.ReLU(),
-            nn.Linear(512, 512),
-            nn.ReLU(),
-            nn.Linear(512, 10),
-            nn.ReLU(),
-        )
+        self.conv1 = nn.Conv2d(1, 32, 3, 1)
+        self.conv2 = nn.Conv2d(32, 64, 3, 1)
+        self.dropout1 = nn.Dropout(0.25)
+        self.dropout2 = nn.Dropout(0.5)
+        self.fc1 = nn.Linear(9216, 128)
+        self.fc2 = nn.Linear(128, 10)
 
     def forward(self, x):
-        x = self.flatten(x)
-        logits = self.linear_relu_stack(x)
-        return logits
+        x = self.conv1(x)
+        x = F.relu(x)
+        x = self.conv2(x)
+        x = F.relu(x)
+        x = F.max_pool2d(x, 2)
+        x = self.dropout1(x)
+        x = torch.flatten(x, 1)
+        x = self.fc1(x)
+        x = F.relu(x)
+        x = self.dropout2(x)
+        x = self.fc2(x)
+        output = F.log_softmax(x, dim=1)
+        return output
 
 
 def train_epoch(dataloader, model, loss_fn, optimizer):
@@ -83,8 +94,9 @@ def validate_epoch(dataloader, model, loss_fn):
     with torch.no_grad():
         for X, y in dataloader:
             pred = model(X)
-            test_loss += loss_fn(pred, y).item()
-            correct += (pred.argmax(1) == y).type(torch.float).sum().item()
+            test_loss += loss_fn(pred, y, reduction='sum').item()
+            pred = pred.argmax(dim=1, keepdim=True)  # get the index of the max log-probability
+            correct += pred.eq(y.view_as(pred)).sum().item()
     test_loss /= num_batches
     correct /= size
     print(
@@ -113,8 +125,8 @@ def train_func(config: Dict):
     model = NeuralNetwork()
     model = train.torch.prepare_model(model)
 
-    loss_fn = nn.CrossEntropyLoss()
-    optimizer = torch.optim.SGD(model.parameters(), lr=lr)
+    loss_fn = F.null_loss()
+    optimizer = torch.optim.Adadelta(model.parameters(), lr=lr)
 
     for epoch in range(epochs):
         train_epoch(train_dataloader, model, loss_fn, optimizer)
@@ -132,8 +144,8 @@ def train_func(config: Dict):
 
 def train_fashion_mnist(num_workers=2, use_gpu=False):
     trainer = TorchTrainer(
-        train_loop_per_worker=train_func,
-        train_loop_config={"lr": 1e-3, "batch_size": 64, "epochs": 4},
+        train_loop_per_worker=train_func, # train function
+        train_loop_config={"lr": 1.0, "batch_size": 64, "epochs": 4}, # parameter
         scaling_config=ScalingConfig(num_workers=num_workers, use_gpu=use_gpu),
         run_config = RunConfig(checkpoint_config=CheckpointConfig(num_to_keep=1))
     )
