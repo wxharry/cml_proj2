@@ -1,5 +1,6 @@
 import os
 import argparse
+from datetime import datetime
 from typing import Dict
 from pprint import pprint
 from ray.air import session
@@ -153,7 +154,9 @@ def train_fashion_mnist(num_workers=2, use_gpu=False):
     print(f"Last result: {result.metrics}")
     print(f"best_checkpoints: {result.best_checkpoints}")
     print(f"result.log_dir: {result.log_dir}")
-    result.checkpoint.to_directory("models/")
+    now = datetime.now()
+    dt_string = now.strftime("%d-%m-%Y-%H-%M-%S")
+    result.checkpoint.to_directory("models/"+dt_string)
 
 
 if __name__ == "__main__":
