@@ -70,7 +70,7 @@ def predict_from_file(image_path):
 # print(res)
 
 
-def predict_from_tensor(image_tensor):
+def predict(image_tensor):
     image_tensor = torch.from_numpy(image_tensor)
     print("type: ", type(image_tensor))
     print("shape: ", image_tensor.shape)
@@ -88,7 +88,7 @@ def predict_from_tensor(image_tensor):
 
 for _ in (
     ray.data.range_tensor(1000, shape=(28, 28, 1), parallelism=1000)
-    .map_batches(predict_from_tensor, num_cpus=4)
+    .map_batches(predict, num_cpus=4)
     .iter_batches()
 ):
     pass
