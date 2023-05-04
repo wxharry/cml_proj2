@@ -92,4 +92,5 @@ for _ in (
     .map_batches(predict, num_cpus=4)
     .iter_batches()
 ):
+    # here we can store the result
     pass
