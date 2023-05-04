@@ -13,7 +13,7 @@ kick_off_pytorch_benchmark = (
 
 submission_id = client.submit_job(
     entrypoint=kick_off_pytorch_benchmark,
-    job_id=strftime('%Y-%m-%d-%H-%M-%S')
+    job_id=strftime('inference-%H-%M-%S')
 )
 
 print("Use the following command to follow this Job's logs:")
