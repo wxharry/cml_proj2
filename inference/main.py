@@ -83,7 +83,9 @@ def predict(image_tensor):
     print(res)
     return [json.dumps(res)]
 
-
+ctx = ray.data.DatasetContext.get_current()
+ctx.execution_options.verbose_progress = True
+ctx.execution_options.resource_limits.cpu = 10
 
 for _ in (
     ray.data.range_tensor(1000, shape=(28, 28, 1), parallelism=1000)
