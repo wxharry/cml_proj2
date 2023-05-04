@@ -41,11 +41,8 @@ class NeuralNetwork(nn.Module):
 
 def model_init():
     model = NeuralNetwork()
-    model_path = os.getenv('MODEL_PATH')
-    if model_path is None or not os.path.exists(model_path):
-        model_path = "./mnist_cnn.pt"
-    model.load_state_dict(torch.load(model_path))
-    model.eval()
+    model_path = "models/03-05-2023-19-00-41/dict_checkpoint.pkl"
+    model = torch.load(model_path)
     return model
 model = model_init()
 
