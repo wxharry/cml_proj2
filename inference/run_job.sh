@@ -6,7 +6,7 @@ echo "current_dir $current_dir"
 # which pip
 # python -m pip install -r $current_dir/requirements.txt
 
-python $current_dir/main.py --num-workers 4
+python main.py
 
 run_current_dir=$(pwd)
 echo "clean $run_current_dir"
