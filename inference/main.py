@@ -1,17 +1,19 @@
+import torch
+import io
 import os
-import argparse
-from typing import Dict
-import ray
-from ray.data import read_images, from_torch
-from ray.air import Checkpoint
-
-from torch import nn
-from torchvision import datasets, transforms
+import time
+import torch
+import json
+import torch.nn as nn
 import torch.nn.functional as F
+from torchvision.transforms.functional import to_tensor, normalize
+from PIL import Image
 
-from ray.train.batch_predictor import BatchPredictor
-from ray.train.torch import TorchPredictor
+import ray
+from ray.data import range_tensor
 
+
+# Load the trained model
 class NeuralNetwork(nn.Module):
     def __init__(self):
         super(NeuralNetwork, self).__init__()
@@ -37,29 +39,56 @@ class NeuralNetwork(nn.Module):
         output = F.log_softmax(x, dim=1)
         return output
 
-my_infr_checkpoint = Checkpoint.from_directory("models/")
-my_model = NeuralNetwork()
+model = NeuralNetwork()
+model_path = os.getenv('MODEL_PATH')
+if model_path is None or not os.path.exists(model_path):
+    model_path = "./mnist_cnn.pt"
+model.load_state_dict(torch.load(model_path))
+model.eval()
 
-batch_predictor = BatchPredictor.from_checkpoint(
-    my_infr_checkpoint, TorchPredictor, model=my_model
-)
+def predict_from_file(image_path):
+    image = None
+    image = Image.open(image_path)
+    
+    # Preprocess the image
+    image = image.convert('L')  # convert to grayscale
+    image = image.resize((28, 28))  # resize
+    image = to_tensor(image)  # convert to tensor
+    print("type: ", type(image))
+    print("shape: ", image.shape)
+    # print(image.shape)
+    
+    # Make the prediction
+    with torch.no_grad():
+        output = model(image.unsqueeze(0))
+        prediction = output.argmax(dim=1).item()
+    
+    # Return the prediction as JSON
+    return json.dumps({'prediction': prediction})
 
-transform=transforms.Compose([
-    transforms.ToTensor(),
-    transforms.Normalize((0.1307,), (0.3081,))
-    ])
+# res = predict_from_file("./dataset/7.png")
+# print(res)
 
-dataset = datasets.MNIST(
-    root="~/data",
-    train=False,
-    download=True,
-    transform=transform,
-)
-ds = from_torch(dataset)
 
-# data_dir = "cml_proj2/inference/dataset"
-# ds = read_images(data_dir, size=(28, 28), include_paths=True)
-# predicted_probabilities = batch_predictor.predict(ds, feature_columns=["image"])
+def predict_from_tensor(image_tensor):
+    image_tensor = torch.from_numpy(image_tensor)
+    print("type: ", type(image_tensor))
+    print("shape: ", image_tensor.shape)
+    # image_tensor = torch.from_numpy(image_tensor)
+    # print("after type: ", type(image_tensor))
+    # print("shape: ", image_tensor.shape)
+    with torch.no_grad():
+        output = model(image_tensor.squeeze(0))
+        prediction = output.argmax(dim=1).item()
+    
+    res = {'prediction': prediction}
+    print(res)
+    return [json.dumps(res)]
 
-predicted_probabilities = batch_predictor.predict(ds)
-predicted_probabilities.show()
+
+for _ in (
+    ray.data.range_tensor(1000, shape=(28, 28, 1), parallelism=1000)
+    .map_batches(predict_from_tensor, num_cpus=4)
+    .iter_batches()
+):
+    pass
