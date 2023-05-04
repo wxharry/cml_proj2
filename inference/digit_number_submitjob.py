@@ -6,7 +6,7 @@ client = JobSubmissionClient("http://0.0.0.0:8265")
 kick_off_pytorch_benchmark = (
     # Clone ray. If ray is already present, don't clone again.
     "git clone https://github.com/wxharry/cml_proj2 || true;"
-    # Run the training code.
+    # Run the inference code.
     "sh cml_proj2/inference/run_job.sh;"
 )
 
