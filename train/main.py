@@ -146,7 +146,7 @@ def train_func(config: Dict):
 def train_fashion_mnist(num_workers=2, use_gpu=False):
     trainer = TorchTrainer(
         train_loop_per_worker=train_func, # train function
-        train_loop_config={"lr": 1.0, "batch_size": 64, "epochs": 4}, # parameter
+        train_loop_config={"lr": 1.0, "batch_size": 64, "epochs": 12}, # parameter
         scaling_config=ScalingConfig(num_workers=num_workers, use_gpu=use_gpu),
         run_config = RunConfig(checkpoint_config=CheckpointConfig(num_to_keep=1))
     )
