@@ -101,7 +101,7 @@ def validate_epoch(dataloader, model, loss_fn):
     test_loss /= num_batches
     correct /= size
     print(
-        f"Test Error: \n "
+        f"Test: \n "
         f"Accuracy: {(100 * correct):>0.1f}%, "
         f"Avg loss: {test_loss:>8f} \n"
     )
