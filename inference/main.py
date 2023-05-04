@@ -39,12 +39,15 @@ class NeuralNetwork(nn.Module):
         output = F.log_softmax(x, dim=1)
         return output
 
-model = NeuralNetwork()
-model_path = os.getenv('MODEL_PATH')
-if model_path is None or not os.path.exists(model_path):
-    model_path = "./mnist_cnn.pt"
-model.load_state_dict(torch.load(model_path))
-model.eval()
+def model_init():
+    model = NeuralNetwork()
+    model_path = os.getenv('MODEL_PATH')
+    if model_path is None or not os.path.exists(model_path):
+        model_path = "./mnist_cnn.pt"
+    model.load_state_dict(torch.load(model_path))
+    model.eval()
+    return model
+model = model_init()
 
 def predict_from_file(image_path):
     image = None
@@ -57,15 +60,13 @@ def predict_from_file(image_path):
     print("type: ", type(image))
     print("shape: ", image.shape)
     # print(image.shape)
-    
-    # Make the prediction
+
     with torch.no_grad():
         output = model(image.unsqueeze(0))
         prediction = output.argmax(dim=1).item()
     
     # Return the prediction as JSON
     return json.dumps({'prediction': prediction})
-
 # res = predict_from_file("./dataset/7.png")
 # print(res)
 
@@ -84,6 +85,7 @@ def predict(image_tensor):
     res = {'prediction': prediction}
     print(res)
     return [json.dumps(res)]
+
 
 
 for _ in (
